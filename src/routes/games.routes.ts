@@ -1,59 +1,114 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
-
-const gamesSchema = z.object({
-  id: z.number(),
-  title: z.string().min(3),
-  wallpaper: z.string().url(),
-  status: z
-    .enum(['Unknown', 'Perfect', 'Playable', 'Unplayable', 'Broken'])
-    .default('Unknown'),
-  updatedAt: z.date(),
-})
+import { gamesSchema, idSchema } from '../schemas'
 
 type Game = z.infer<typeof gamesSchema>
 
 const fakeGames: Game[] = [
   {
-    id: 0,
+    id: 'fd16c96a-3e63-4a62-8f50-0d27b6a2be7a',
     title: 'Duck Game',
     wallpaper:
       'https://res.cloudinary.com/duyusab1p/image/upload/v1652041626/skyrim_tf2pba.png',
-    status: 'Perfect',
+    state: 'Perfect',
     updatedAt: new Date(),
+    createdAt: new Date(),
   },
   {
-    id: 1,
+    id: 'fd26c46a-3e63-4a62-8f50-0d27b6a2be7a',
     title: 'Dragon Ball Z',
     wallpaper:
       'https://res.cloudinary.com/duyusab1p/image/upload/v1652041626/skyrim_tf2pba.png',
-    status: 'Unknown',
+    state: 'Unknown',
     updatedAt: new Date(),
+    createdAt: new Date(),
   },
   {
-    id: 2,
+    id: 'fd16c96a-3e63-4a62-8f50-0d27b6a2be7b',
     title: 'Black ops 2',
     wallpaper:
       'https://res.cloudinary.com/duyusab1p/image/upload/v1652041626/skyrim_tf2pba.png',
-    status: 'Playable',
+    state: 'Playable',
     updatedAt: new Date(),
+    createdAt: new Date(),
   },
 ]
 
 export const gamesRoute = new Hono()
   .get('/', (c) => {
-    return c.json({ fakeGames })
+    return c.json({ games: fakeGames })
   })
-  .get('/:game', (c) => {
-    return c.json({ message: '/:game' })
+  .get('/:id', (c) => {
+    try {
+      const id = idSchema.parse(c.req.param('id'))
+      const game = fakeGames.find((game) => game.id === id)
+
+      if (!game) {
+        c.status(404)
+        return c.json({ message: 'Game not found' })
+      }
+
+      c.status(201)
+      return c.json(game)
+    } catch (error) {
+      c.status(400)
+      return c.json({ message: 'Invalid ID format' })
+    }
   })
   .post('/', zValidator('json', gamesSchema), async (c) => {
-    const game = await c.req.valid('json')
-    fakeGames.push({ ...game, id: fakeGames.length + 1 })
-    c.status(201)
-    return c.json(game)
+    try {
+      const game = await c.req.valid('json')
+      fakeGames.push({
+        ...game,
+        id: `fd16c96a-3e63-4a62-8f50-0d${fakeGames.length + 1}b6a2be7a`,
+      })
+
+      if (!game) {
+        c.status(404)
+        return c.json({ message: 'Game not found' })
+      }
+
+      c.status(201)
+      return c.json(game)
+    } catch (error) {
+      c.status(400)
+      return c.json({ message: 'It was not possible to add this game' })
+    }
   })
-  .put('/:game', (c) => {
-    return c.json({ message: '/PUT' })
+  .put('/:id', (c) => {
+    try {
+      const id = idSchema.parse(c.req.param('id'))
+      const game = fakeGames.find((game) => game.id === id)
+
+      if (!game) {
+        c.status(404)
+        return c.json({ message: 'Game not found' })
+      }
+
+      c.status(201)
+      return c.json({ message: '/PUT' })
+    } catch (error) {
+      c.status(400)
+      return c.json({ message: 'It was not possible to update this game' })
+    }
+  })
+  .delete('/:id', (c) => {
+    try {
+      const id = idSchema.parse(c.req.param('id'))
+      const index = fakeGames.findIndex((game) => game.id === id)
+
+      if (index === -1) {
+        c.status(404)
+        return c.json({ message: 'Game not found' })
+      }
+
+      const deletedGame = fakeGames.splice(index, 1)[0]
+
+      c.status(201)
+      return c.json({ deletedGame })
+    } catch (error) {
+      c.status(400)
+      return c.json({ message: 'It was not possible to delete this game' })
+    }
   })

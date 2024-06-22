@@ -37,9 +37,11 @@ const fakeGames: Game[] = [
 
 export const gamesRoute = new Hono()
   .get('/', (c) => {
-    return c.json({ games: fakeGames })
+    // Get all games
+    return c.json({ games: fakeGames, length: fakeGames.length })
   })
   .get('/:id', (c) => {
+    // Get game by id
     try {
       const id = idSchema.parse(c.req.param('id'))
       const game = fakeGames.find((game) => game.id === id)
@@ -53,10 +55,11 @@ export const gamesRoute = new Hono()
       return c.json(game)
     } catch (error) {
       c.status(400)
-      return c.json({ message: 'Invalid ID format' })
+      return c.json({ message: 'Invalid id format' })
     }
   })
   .post('/', zValidator('json', gamesSchema), async (c) => {
+    // Add a game
     try {
       const game = await c.req.valid('json')
       fakeGames.push({
@@ -66,7 +69,7 @@ export const gamesRoute = new Hono()
 
       if (!game) {
         c.status(404)
-        return c.json({ message: 'Game not found' })
+        return c.json({ message: 'Invalid game schema' })
       }
 
       c.status(201)
@@ -77,6 +80,7 @@ export const gamesRoute = new Hono()
     }
   })
   .put('/:id', (c) => {
+    // Edit game by id
     try {
       const id = idSchema.parse(c.req.param('id'))
       const game = fakeGames.find((game) => game.id === id)
@@ -94,6 +98,7 @@ export const gamesRoute = new Hono()
     }
   })
   .delete('/:id', (c) => {
+    // Delete game by id
     try {
       const id = idSchema.parse(c.req.param('id'))
       const index = fakeGames.findIndex((game) => game.id === id)

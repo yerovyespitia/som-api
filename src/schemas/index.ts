@@ -22,5 +22,5 @@ export const commentSchema = z.object({
   launcher: launcherSchema,
   state: stateSchema,
   mac: macSchema,
-  date: z.date(),
+  createdAt: z.date(),
 })

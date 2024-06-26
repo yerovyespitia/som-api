@@ -12,6 +12,15 @@ export const gamesSchema = z.object({
   createdAt: z.date(),
 })
 
+export const usersSchema = z.object({
+  id: idSchema,
+  username: z.string().min(3),
+  photo: z.string().url(),
+  email: z.string().email(),
+  password: z.string().min(6).regex(/[a-z]/).regex(/[A-Z]/).regex(/[0-9]/),
+  createdAt: z.date(),
+})
+
 export const commentSchema = z.object({
   id: idSchema,
   userId: idSchema,
